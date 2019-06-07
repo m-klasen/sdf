@@ -50,3 +50,16 @@ def accel_tangent(t):
 def accel_normal(t):    
     [x,y] = calcAcceleration(t)
     return [x*calc_normal(t)[0],y*calc_normal(t)[1]]
+
+
+def normrand(i):
+    sigma = 50
+    x = np.random.normal(0,sigma,1)
+    y = np.random.normal(0,sigma,1)
+    print([x,y])
+    return [x,y]
+
+def cart_coord(i):
+    x = calcPosition(i)[0]+calcVelocity(i)[0]+calcAcceleration(i)[0]+normrand(i)[0]
+    y = calcPosition(i)[1]+calcVelocity(i)[1]+calcAcceleration(i)[1]+normrand(i)[1]
+    return [x,y]

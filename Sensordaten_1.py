@@ -24,13 +24,15 @@ axesAccelerationArrow = fig.add_subplot(grid[2:4, 4:6])
 
 ax = plt.figure(1)
 
-plottangent = ax.add_subplot(grid[0:2, 0:2])
+'''plottangent = ax.add_subplot(grid[0:2, 0:2])
 plotnormal = ax.add_subplot(grid[0:2, 2:4])
 
 plot_absvelo = ax.add_subplot(grid[0:2,4:6])
 plot_absaccel = ax.add_subplot(grid[2:4,0:2])
 plot_acceltangent = ax.add_subplot(grid[2:4,2:4])
-plot_accelnormal = ax.add_subplot(grid[2:4,4:6])
+plot_accelnormal = ax.add_subplot(grid[2:4,4:6])'''
+
+plot_z = ax.add_subplot(grid[0:2, 0:2])
 
 def main():
     ani = animation.FuncAnimation(fig, update_plot, interval=1, frames=300)
@@ -126,13 +128,14 @@ def update_plot2(i):
     i = i * multi
 
 
-    plottangent.scatter(calc_tangent(i)[0],calc_tangent(i)[1])
+    plot_z.scatter(cart_coord(i)[0],cart_coord(i)[1])
+'''    plottangent.scatter(calc_tangent(i)[0],calc_tangent(i)[1])
     plotnormal.scatter(calc_normal(i)[0], calc_normal(i)[1])
 
     plot_absvelo.scatter(abs_velo(i),i)
     plot_absaccel.scatter(abs_accel(i),i)
     plot_acceltangent.scatter(accel_tangent(i)[0],accel_tangent(i)[1])
-    plot_accelnormal.scatter(accel_normal(i)[0],accel_normal(i)[1])
+    plot_accelnormal.scatter(accel_normal(i)[0],accel_normal(i)[1])'''
 
 
 def clear(x, y, xOld, yOld):
