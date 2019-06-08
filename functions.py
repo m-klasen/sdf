@@ -52,14 +52,33 @@ def accel_normal(t):
     return [x*calc_normal(t)[0],y*calc_normal(t)[1]]
 
 
-def normrand(i):
-    sigma = 50
+def normrand(deviation):
+    sigma = deviation
     x = np.random.normal(0,sigma,1)
     y = np.random.normal(0,sigma,1)
-    print([x,y])
     return [x,y]
 
 def cart_coord(i):
-    x = calcPosition(i)[0]+calcVelocity(i)[0]+calcAcceleration(i)[0]+normrand(i)[0]
-    y = calcPosition(i)[1]+calcVelocity(i)[1]+calcAcceleration(i)[1]+normrand(i)[1]
+    x = calcPosition(i)[0]+normrand(50)[0]
+    y = calcPosition(i)[1]+normrand(50)[1]
     return [x,y]
+
+def polar_coord(i, radarX, radarY):
+    deviation = 20
+    winkel = 0.2
+    plainPosition = calcPosition(i)
+    xk = plainPosition[0]
+    yk = plainPosition[1]
+    xs = radarX
+    ys = radarY
+    range = math.sqrt(math.pow((xk-xs), 2) + math.pow((yk-ys), 2)) + normrand(deviation)[0]
+    winkel = math.atan((yk-ys)/(xk-xs)) #+ normrand(winkel)[1]
+    while True:
+        if (xk-xs) < 0:
+            if (yk-ys) < 0:
+                winkel -= math.pi
+                break
+            winkel += math.pi
+            break
+        break
+    return [range, winkel]

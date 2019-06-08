@@ -8,36 +8,37 @@ ncols = 6
 nrows = 4
 grid = GridSpec(nrows, ncols,
                 left=0.1, bottom=0.15, right=0.94, top=0.94, wspace=1, hspace=1)
-
+'''
+#Figure 0
 fig = plt.figure(0)
-fig.clf()
 
-# Add axes which can span multiple grid boxes
 axesPosition = fig.add_subplot(grid[0:2, 0:2])
 axesPositionArrow = fig.add_subplot(grid[2:4, 0:2])
-
 axesVelocity = fig.add_subplot(grid[0:2, 2:4])
 axesVelocityArrow = fig.add_subplot(grid[2:4, 2:4])
-
 axesAcceleration = fig.add_subplot(grid[0:2, 4:6])
 axesAccelerationArrow = fig.add_subplot(grid[2:4, 4:6])
 
+#Figure 1
 ax = plt.figure(1)
 
-'''plottangent = ax.add_subplot(grid[0:2, 0:2])
+plottangent = ax.add_subplot(grid[0:2, 0:2])
 plotnormal = ax.add_subplot(grid[0:2, 2:4])
-
 plot_absvelo = ax.add_subplot(grid[0:2,4:6])
 plot_absaccel = ax.add_subplot(grid[2:4,0:2])
 plot_acceltangent = ax.add_subplot(grid[2:4,2:4])
-plot_accelnormal = ax.add_subplot(grid[2:4,4:6])'''
+plot_accelnormal = ax.add_subplot(grid[2:4,4:6])
+'''
+#Figure 2
+radar = plt.figure(2)
+plot_cartesian = radar.add_subplot(grid[0:6, 0:6])
 
-plot_z = ax.add_subplot(grid[0:2, 0:2])
 
 def main():
-    ani = animation.FuncAnimation(fig, update_plot, interval=1, frames=300)
-
-    ani2 = animation.FuncAnimation(ax, update_plot2, interval=1, frames=300)
+    #setAxesSize()
+    #ani = animation.FuncAnimation(fig, update_plot, interval=1, frames=300)
+    #ani2 = animation.FuncAnimation(ax, update_plot2, interval=1, frames=300)
+    ani3 = animation.FuncAnimation(radar, update_plot_radar, interval=1, frames=300)
 
     plt.show()
 
@@ -127,16 +128,36 @@ def update_plot2(i):
     dotSizeAcceleration = multi
     i = i * multi
 
-
-    plot_z.scatter(cart_coord(i)[0],cart_coord(i)[1])
-'''    plottangent.scatter(calc_tangent(i)[0],calc_tangent(i)[1])
+    plottangent.scatter(calc_tangent(i)[0],calc_tangent(i)[1])
     plotnormal.scatter(calc_normal(i)[0], calc_normal(i)[1])
 
     plot_absvelo.scatter(abs_velo(i),i)
     plot_absaccel.scatter(abs_accel(i),i)
     plot_acceltangent.scatter(accel_tangent(i)[0],accel_tangent(i)[1])
-    plot_accelnormal.scatter(accel_normal(i)[0],accel_normal(i)[1])'''
+    plot_accelnormal.scatter(accel_normal(i)[0],accel_normal(i)[1])
 
+def update_plot_radar(i):
+    multi = 5
+    dotSizePosition = 10 * multi
+    i = i * multi
+    
+    vecPosition = calcPosition(i)
+    xPosition = vecPosition[0]
+    yPosition = vecPosition[1]
+    plot_cartesian.scatter([xPosition], [yPosition], c='red', s = dotSizePosition)
+
+    vecRadarPosition = cart_coord(i)
+    xRadarPosition = vecRadarPosition[0]
+    yRadarPosition = vecRadarPosition[1]
+    plot_cartesian.scatter([xRadarPosition], [yRadarPosition], c='blue', s = dotSizePosition)
+    
+    radarX = 0
+    radarY = 0
+    vecRadarPosition = polar_coord(i, radarX, radarY)
+    xRadarPosition = vecRadarPosition[0] * math.cos(vecRadarPosition[1]) 
+    yRadarPosition = vecRadarPosition[0] * math.sin(vecRadarPosition[1])
+    plot_cartesian.scatter([xRadarPosition], [yRadarPosition], c='green', s = dotSizePosition)
+    
 
 def clear(x, y, xOld, yOld):
     if x > 0 and y > 0 and xOld < 0 and yOld < 0 :
@@ -163,6 +184,4 @@ def arrow(xPosition, yPosition, xVelocity, yVelocity, xAcceleration, yAccelerati
     head_width=0.2, head_length=0.6 )
 
 
-
-setAxesSize()
 main()
