@@ -28,18 +28,22 @@ plot_absvelo = ax.add_subplot(grid[0:2,4:6])
 plot_absaccel = ax.add_subplot(grid[2:4,0:2])
 plot_acceltangent = ax.add_subplot(grid[2:4,2:4])
 plot_accelnormal = ax.add_subplot(grid[2:4,4:6])
-'''
+
 #Figure 2
 radar = plt.figure(2)
 plot_cartesian = radar.add_subplot(grid[0:6, 0:6])
+'''
+#Figure 3
+kal = plt.figure(3)
+plot_vergleich = kal.add_subplot(grid[0:6, 0:6])
 
 
 def main():
     #setAxesSize()
     #ani = animation.FuncAnimation(fig, update_plot, interval=1, frames=300)
     #ani2 = animation.FuncAnimation(ax, update_plot2, interval=1, frames=300)
-    ani3 = animation.FuncAnimation(radar, update_plot_radar, interval=1, frames=300)
-
+    #ani3 = animation.FuncAnimation(radar, update_plot_radar, interval=1, frames=300)
+    drawKalman()
     plt.show()
 
 def setAxesSize():
@@ -157,6 +161,41 @@ def update_plot_radar(i):
     xRadarPosition = vecRadarPosition[0] * math.cos(vecRadarPosition[1]) 
     yRadarPosition = vecRadarPosition[0] * math.sin(vecRadarPosition[1])
     plot_cartesian.scatter([xRadarPosition], [yRadarPosition], c='green', s = dotSizePosition)
+
+def drawKalman():
+    start = 1   #min 1 wegen kalman prediction
+    end = 50
+    x1 = [start, end]
+    y1 = [0, 0]
+    x2 = []
+    gTruth =[]
+    radar =[]
+    radarY =[]
+    kFilter =[]
+    kFilterY =[]
+    for x in range(start, end): #startet bei 1 wegen kalman prediction
+        x2.append(x)
+        gTruth.append(calcPosition(x))
+        radar.append(polar_RadarPunkt(x, 0, 0))
+        kFilter.append(constAccKalman(x-1, 1, 1, 0, 0))
+        radarY.append(coord_Distanz(radar[x-1], gTruth[x-1])) #x-1 da ich ja auch bei 1 starte
+        kFilterY.append(coord_Distanz(kFilter[x-1], gTruth[x-1]))
+    plot_vergleich.plot(x1, y1, x2, radarY, x2 , kFilterY)
+    plot_vergleich.legend(["GroundTruth", "Radar Abweichung", "Kalman Prediction Abweichung"])
+
+def constAccKalman(i, t, radaType, x, y):
+    if radaType == 0:
+        position = cart_coord(i)
+    else:
+        position = polar_RadarPunkt(i, x, y)
+    velocity = calcVelocity(i)
+    accerleration = calcAcceleration(i)
+    nextPosX = position[0] + (t*velocity[0]) + (0.5 * t**2 * accerleration[0])
+    nextPosY = position[1] + (t*velocity[1]) + (0.5 * t * accerleration[1])
+    nextVelX = velocity[0] + (t* accerleration[0])
+    nextVelY = velocity[1] + (t* accerleration[1])
+    #geben nur die zukünftige Position aus, also i+t
+    return[nextPosX, nextPosY]
     
 
 def clear(x, y, xOld, yOld):

@@ -82,3 +82,13 @@ def polar_coord(i, radarX, radarY):
             break
         break
     return [range, winkel]
+
+def polar_RadarPunkt(i, radarX, radarY):
+    vec = polar_coord(i, radarX, radarY)
+    x = vec[0] * math.cos(vec[1]) 
+    y = vec[0] * math.sin(vec[1])
+    return[x, y]
+
+def coord_Distanz(p1, p2):
+    return math.hypot(p2[0]-p1[0], p2[0]-p1[0])
+    
