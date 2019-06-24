@@ -72,7 +72,7 @@ def cart_coord1(i,dev):
 
 def polar_coord(i, radarX, radarY):
     range_dev = normrand(20)[0]
-    winkel_dev = normrand(0.2)[0]
+    winkel_dev = normrand(0.15)[0]
     plainPosition = calcPosition(i)
     xk = plainPosition[0]
     yk = plainPosition[1]
@@ -81,16 +81,6 @@ def polar_coord(i, radarX, radarY):
     pos_r = np.array([xs,ys])
     range = np.linalg.norm(plainPosition-pos_r)
     winkel = np.arctan2((yk-ys),(xk-xs))
-    # if (xk-xs) > 0:
-    #     winkel = np.arctan((yk-ys)/(xk-xs))
-    # if (xk-xs) < 0 and (yk-ys)>= 0:
-    #     winkel = np.arctan((yk-ys)/(xk-xs))+math.pi
-    # elif (xk-xs) < 0 and (yk-ys)< 0:
-    #     winkel = np.arctan((yk-ys)/(xk-xs))-math.pi
-    # elif (xk-xs)== 0 and (yk-ys)> 0:
-    #     winkel = math.pi/2 
-    # elif (xk-xs)== 0 and (yk-ys)< 0:
-    #     winkel = -math.pi/2
     return [range+range_dev, winkel+winkel_dev], range_dev,winkel_dev
 
 def polar_RadarPunkt(i, radarX, radarY):

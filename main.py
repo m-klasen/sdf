@@ -86,15 +86,12 @@ class Window(Frame):
 
 		self.ell_p = Ellipse(xy=(0,0),width=1, height=1,angle=2, facecolor='#d5b60a',alpha=0.5)
 		self.ax.add_patch(self.ell_p)
-		### Kalman 
-		self.kalm_rad, = self.bx.plot([],[], markerfacecolor="o", label="Measurement")	
-		self.kalm_filt, = self.bx.plot([],[], markerfacecolor="b", label="Kalman")	
-		self.bx.legend()
+
 
 
 
 		self.ax.axis([-1500, 1500, -1500, 1500])
-		self.bx.axis([0, 500, 0, 500])		
+		self.bx.axis([0, 1000, 0, 1000])		
 	def init_window(self):
 		### Window Interface
 		self.kart = Radiobutton(self, text="Kart Messung", variable=self.measure,value=1)
@@ -163,17 +160,40 @@ class Window(Frame):
 		self.init_plots()
 
 		### Kalman
-		t = 1/5
-		F= np.array([[1,t,0.5*t**2],
-					 [0,1,t],
-					 [0,0,1]])
-		D = np.array([[0.25*t**4,0.5*t**3, 0.5*t**2],
-					 [0.5*t**3,t**2,t],
-					 [0.5*t**2,t,1]])*0.6**2
-		H = np.array([[1,0,0],
-					  [1,0,0]]).reshape(2, 3)
-		R = np.eye(2)*50**2
-		P = np.eye(3)*100
+		self.kalm_rad, = self.bx.plot([],[], markerfacecolor="o", label="Measurement")	
+		self.kalm_filt, = self.bx.plot([],[], markerfacecolor="b", label="Kalman")	
+		self.bx.legend()
+		# t = 1/5
+		# F= np.array([[1,t,0.5*t**2],
+		# 			 [0,1,t],
+		# 			 [0,0,1]])
+		# D = np.array([[0.25*t**4,0.5*t**3, 0.5*t**2],
+		# 			 [0.5*t**3,t**2,t],
+		# 			 [0.5*t**2,t,1]])*0.6**2
+		# H = np.array([[1,0,0],
+		# 			  [1,0,0]]).reshape(2, 3)
+		# R = np.eye(2)*50**2
+		# P = np.eye(3)*10
+
+		dt = 1/5
+		F = np.matrix([[1.0, 0.0, dt, 0.0, 1/2.0*dt**2, 0.0],
+						[0.0, 1.0, 0.0, dt, 0.0, 1/2.0*dt**2],
+						[0.0, 0.0, 1.0, 0.0, dt, 0.0],
+						[0.0, 0.0, 0.0, 1.0, 0.0, dt],
+						[0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+						[0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
+		D = np.array([[0.25*dt**4,0.25*dt**4,0.5*dt**3,0.5*dt**3,0.5*dt**2,0.5*dt**2],
+					 [0.25*dt**4,0.25*dt**4,0.5*dt**3,0.5*dt**3,0.5*dt**2,0.5*dt**2],
+					 [0.5*dt**3,0.5*dt**3,dt**2,dt**2,dt,dt],
+					 [0.5*dt**3,0.5*dt**3,dt**2,dt**2,dt,dt],
+					 [0.5*dt**2,0.5*dt**2,dt,dt,1,1],
+					 [0.5*dt**2,0.5*dt**2,dt,dt,1,1]])*0.7**2
+		H = np.matrix([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+						[0.0, 1.0, 0.0, 0.0, 0.0, 0.0]])
+		rp = 50**2
+		R = np.matrix([[rp, 0.0],
+						[0.0, rp]])
+		P = np.eye(6)*10
 		kf = Kalman(F = F,P=P, H = H, D = D, R = R)
 
 
@@ -190,9 +210,9 @@ class Window(Frame):
 			R_k = D @ R @ D.T
 			return R_k
 
-		def cov_ellipse(cov, nstd=3):
+		def cov_ellipse(cov, nstd=1):
 			vals, vecs = np.linalg.eigh(cov)
-			theta = np.degrees(np.arctan2(*vecs[:, 1][::-1]))
+			theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
 			height,width = 2 * nstd * np.sqrt(vals)
 			return width, height, theta
 
@@ -343,40 +363,39 @@ class Window(Frame):
 					kalm_tmp = c3
 				if self.kalm4.get()==True:
 					kalm_tmp = c4
-			predict_1 = kf.predict()
-			self.predictions_x.append(np.dot(H, predict_1[0][0]))
-			self.predictions_y.append(np.dot(H, predict_1[0][1]))			
-			if i%5==0:
-				kf.update(kalm_tmp)
-			else:
-				try:
-					kf.update([self.predictions_x[i-1],self.predictions_y[i-1]])
-				except: None
-			if self.measure.get()==0:
-				P = kf.P[0:4:2, 0:4:2]
+			# if self.multsen.get()==True:
+			# 	kalm_tmp = z_k
+	
 
+
+			predict_1 = kf.predict()
+			predict_1 = H @ predict_1
+			#print("post",predict_1[0],predict_1[1])
+			#print("truth",calcPosition(i)[0],calcPosition(i)[1])
+			print(kf.P)
+			self.predictions_x.append(predict_1[0])
+			self.predictions_y.append(predict_1[1])		
+			
 			self.x_all.append(i)
 			self.gTruth.append(calcPosition(i))
-			self.measure_r.append(kalm_tmp)
-			self.kFilter.append([self.predictions_x[-1][0][0],self.predictions_y[-1][0][0]])	
-			if i%5==0:
+			
+			self.kFilter.append([self.predictions_x[-1][0],self.predictions_y[-1][0]])	
+			if (i%5==0) or (i==0):
+				kf.update(kalm_tmp)
+				self.measure_r.append(kalm_tmp)
 				self.measureX.append(i)
-				self.measureY.append(coord_Distanz(self.measure_r[i], self.gTruth[i]))
-				self.kFilterY.append(coord_Distanz(self.kFilter[i], self.gTruth[i])) 
-			else:
-				try:
-					self.measureX.append(i)
-					self.measureY.append(coord_Distanz(self.measure_r[i-1], self.gTruth[i]))
-					self.kFilterY.append(coord_Distanz(self.kFilter[i], self.gTruth[i])) 
-				except: None
+				self.measureY.append(coord_Distanz(self.measure_r[-1], self.gTruth[i]))
+			#kf.update(self.measure_r[-1])
+			#self.measure_r.append(self.measure_r[-1])
+
 			
-			
+				
+			self.kFilterY.append(coord_Distanz(self.kFilter[i], self.gTruth[i])) 
 
 			self.kalm_rad.set_data(self.measureX, self.measureY)
 			self.kalm_filt.set_data(self.x_all , self.kFilterY)
 			self.bx.set_xlim(i-50,i+50)
 			self.bx.set_xlabel(i)   
-	
 
 			return self.scat2,self.pltsen1,self.pltsen2,self.pltsen3,self.pltsen4,self.pltsen5,self.multisen,self.kalm_filt,self.kalm_rad,self.ell1,self.ell2,self.ell3,self.ell4,self.ell_p
 		
@@ -386,7 +405,7 @@ class Window(Frame):
 		self.pack(fill='both', expand=1)
 
 		self.canvas = FigureCanvasTkAgg(self.fig, master=self)
-		self.canvas.get_tk_widget().grid(column=3,row=5)
+		self.canvas.get_tk_widget().grid(column=3,row=6)
 
 
 
