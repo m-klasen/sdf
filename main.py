@@ -30,6 +30,7 @@ class Window(Frame):
 		self.kalm2 = BooleanVar()
 		self.kalm3 = BooleanVar()
 		self.kalm4 = BooleanVar()
+		self.multsen_kalm = BooleanVar()
 		self.init_window()
 
 	def clear(self):
@@ -49,6 +50,8 @@ class Window(Frame):
 		self.y_line3=[]
 		self.x_line4=[]
 		self.y_line4=[]
+		self.z_k_fusion_x=[]
+		self.z_k_fusion_y=[]
 
 		### Ground Truth Plot
 		self.ground = self.ax.plot([calcPosition(i)[0] for i in range(0,1000)],[calcPosition(i)[1] for i in range(0,1000)],c="b")
@@ -115,26 +118,29 @@ class Window(Frame):
 		self.senfus = Checkbutton(self, text="Multisensor", variable=self.multsen,onvalue = 1, offvalue = 0)
 		self.senfus.grid(row=5,column=0)
 
-		self.plot_ellipses = Checkbutton(self, text="Show cov. Ellipses", variable=self.plot_ell ,onvalue = 1, offvalue = 0)
-		self.plot_ellipses.grid(row=5,column=1)
+		self.plot_ellipses = Checkbutton(self, text="Cov. Ellipses (polar only)", variable=self.plot_ell ,onvalue = 1, offvalue = 0)
+		self.plot_ellipses.grid(row=0,column=3)
 
-		self.kalman1 = Checkbutton(self, text="Kalman 1", variable=self.kalm1,onvalue = 1, offvalue = 0)
+		self.kalman1 = Checkbutton(self, text="Kalman 1", variable=self.kalm1, offvalue = 0,onvalue = 1)
 		self.kalman1.grid(row=1,column=1)
 
 		self.kalman2 = Checkbutton(self, text="Kalman 2", variable=self.kalm2,onvalue = 1, offvalue = 0)
 		self.kalman2.grid(row=2,column=1)
 
-		self.kalman3 = Checkbutton(self, text="Kalman 2", variable=self.kalm3,onvalue = 1, offvalue = 0)
+		self.kalman3 = Checkbutton(self, text="Kalman 3", variable=self.kalm3,onvalue = 1, offvalue = 0)
 		self.kalman3.grid(row=3,column=1)
 
-		self.kalman4 = Checkbutton(self, text="Kalman 3", variable=self.kalm4,onvalue = 1, offvalue = 0)
+		self.kalman4 = Checkbutton(self, text="Kalman 4", variable=self.kalm4,onvalue = 1, offvalue = 0)
 		self.kalman4.grid(row=4,column=1)
 
-		self.clear_button = Button(self, text="Clear", command=self.clear)
-		self.clear_button.grid(row=0,column=4)
+		self.kalm_fus = Checkbutton(self, text="Kalman Fusion", variable=self.multsen_kalm,onvalue = 1, offvalue = 0)
+		self.kalm_fus.grid(row=5,column=1)
+
+		self.clear_button = Button(self, text="Clear Plot", command=self.clear)
+		self.clear_button.grid(row=6,column=1)
 
 		self.close_button = Button(self, text="Close", command=self.quit)
-		self.close_button.grid(row=1,column=4)
+		self.close_button.grid(row=6,column=2)
 
 		### Sensor Placement init
 		self.sen1_pos = [500,0]
@@ -146,74 +152,78 @@ class Window(Frame):
 		self.measure_r =[]
 		self.measureX=[]
 		self.measureY =[]
-		self.kFilter =[]
+		self.kFilter =[]		
+		self.kFilter1 =[]
+		self.kFilter2 =[]
+		self.kFilter3 =[]
+		self.kFilter4 =[]
 		self.kFilterY =[]
+		self.kFilterY1 =[]
+		self.kFilterY2 =[]
+		self.kFilterY3 =[]
+		self.kFilterY4 =[]
 		self.x_all=[]
 		self.predictions_x=[]
 		self.predictions_y=[]
-		self.z_k_fusion_x=[]
-		self.z_k_fusion_y=[]
+		self.predictions_x1=[]
+		self.predictions_y1=[]
+		self.predictions_x2=[]
+		self.predictions_y2=[]
+		self.predictions_x3=[]
+		self.predictions_y3=[]
+		self.predictions_x4=[]
+		self.predictions_y4=[]
 
-		self.fig = plt.figure(figsize=(12,4))
-		self.ax = self.fig.add_subplot(121)
-		self.bx = self.fig.add_subplot(122)
+		self.fig = plt.figure(figsize=(5,8))
+		self.ax = self.fig.add_subplot(211)
+		self.bx = self.fig.add_subplot(212)
 		self.init_plots()
 
 		### Kalman
-		self.kalm_rad, = self.bx.plot([],[], markerfacecolor="o", label="Measurement")	
-		self.kalm_filt, = self.bx.plot([],[], markerfacecolor="b", label="Kalman")	
+		self.kalm_rad, = self.bx.plot([],[], markerfacecolor="o", label="Radar deviation to truth ")	
+		self.kalm_filt, = self.bx.plot([],[], markerfacecolor="b", label="Kalman Sensorfusion")
+		self.kalm_filt1, = self.bx.plot([],[], markerfacecolor="b", label="Kalman1")	
+		self.kalm_filt2, = self.bx.plot([],[], markerfacecolor="b", label="Kalman2")	
+		self.kalm_filt3, = self.bx.plot([],[], markerfacecolor="b", label="Kalman3")	
+		self.kalm_filt4, = self.bx.plot([],[], markerfacecolor="b", label="Kalman4")		
 		self.bx.legend()
-		# t = 1/5
-		# F= np.array([[1,t,0.5*t**2],
-		# 			 [0,1,t],
-		# 			 [0,0,1]])
-		# D = np.array([[0.25*t**4,0.5*t**3, 0.5*t**2],
-		# 			 [0.5*t**3,t**2,t],
-		# 			 [0.5*t**2,t,1]])*0.6**2
-		# H = np.array([[1,0,0],
-		# 			  [1,0,0]]).reshape(2, 3)
-		# R = np.eye(2)*50**2
-		# P = np.eye(3)*10
+		
+		### Kalman Init from kalman_function.py
+		t = 1/5
+		F= np.array([[1,t,0.5*t**2],
+					 [0,1,t],
+					 [0,0,1]])
+		D = np.array([[0.25*t**4,0.5*t**3, 0.5*t**2],
+					 [0.5*t**3,t**2,t],
+					 [0.5*t**2,t,1]])*0.6**2
+		H = np.array([[1,0,0],
+					  [1,0,0]]).reshape(2, 3)
+		R = np.eye(2)*50**2
+		P = np.eye(3)*10
 
-		dt = 1/5
-		F = np.matrix([[1.0, 0.0, dt, 0.0, 1/2.0*dt**2, 0.0],
-						[0.0, 1.0, 0.0, dt, 0.0, 1/2.0*dt**2],
-						[0.0, 0.0, 1.0, 0.0, dt, 0.0],
-						[0.0, 0.0, 0.0, 1.0, 0.0, dt],
-						[0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-						[0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
-		D = np.array([[0.25*dt**4,0.25*dt**4,0.5*dt**3,0.5*dt**3,0.5*dt**2,0.5*dt**2],
-					 [0.25*dt**4,0.25*dt**4,0.5*dt**3,0.5*dt**3,0.5*dt**2,0.5*dt**2],
-					 [0.5*dt**3,0.5*dt**3,dt**2,dt**2,dt,dt],
-					 [0.5*dt**3,0.5*dt**3,dt**2,dt**2,dt,dt],
-					 [0.5*dt**2,0.5*dt**2,dt,dt,1,1],
-					 [0.5*dt**2,0.5*dt**2,dt,dt,1,1]])*0.7**2
-		H = np.matrix([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-						[0.0, 1.0, 0.0, 0.0, 0.0, 0.0]])
-		rp = 50**2
-		R = np.matrix([[rp, 0.0],
-						[0.0, rp]])
-		P = np.eye(6)*10
 		kf = Kalman(F = F,P=P, H = H, D = D, R = R)
+		kf1 = Kalman(F = F,P=P, H = H, D = D, R = R)
+		kf2 = Kalman(F = F,P=P, H = H, D = D, R = R)
+		kf3 = Kalman(F = F,P=P, H = H, D = D, R = R)
+		kf4 = Kalman(F = F,P=P, H = H, D = D, R = R)
 
-
-
+		### Helper funktions for Ellipse Plotting 
 		def cart_error_covar(pos,p1):
 			[x_k,y_k] = pos
 			[x_p,y_p] = p1
 
 			phi = np.arctan2((y_p-y_k),(x_p-x_k))
-			r = np.linalg.norm(np.array(pos)-np.array(p1))
+			r = np.linalg.norm(np.array(p1)-np.array(pos))
 			R = np.array([[20**2,0],[0,(r*0.2)**2]])
 			D = np.array([[math.cos(phi),-math.sin(phi)],
 						[math.sin(phi),math.cos(phi)]])
 			R_k = D @ R @ D.T
 			return R_k
 
-		def cov_ellipse(cov, nstd=1):
+		def cov_ellipse(cov, nstd=2):
 			vals, vecs = np.linalg.eigh(cov)
 			theta = np.degrees(np.arctan2(*vecs[:, 0][::-1]))
-			height,width = 2 * nstd * np.sqrt(vals)
+			width,height = 2 * nstd * np.sqrt(vals)
 			return width, height, theta
 
 
@@ -235,7 +245,6 @@ class Window(Frame):
 			c4,x_d4,y_d4 = cart_coord(i,50)
 			xy = [calcPosition(i),p1,p2,p3,p4,c1,c2,c3,c4]
 			tmp = np.c_[np.array(xy).T[0], np.array(xy).T[1]]
-
 			### Plot Current position
 			self.scat2.set_offsets(tmp[0,:2])
 
@@ -343,61 +352,73 @@ class Window(Frame):
 					self.multisen.set_data(self.z_k_fusion_x,self.z_k_fusion_y)
 
 
-			### Init Kalman
-			kalm_tmp = p1
-			if self.measure.get()==0:
-				if self.kalm1.get()==True:
-					kalm_tmp = p1			
-				if self.kalm2.get()==True:
-					kalm_tmp = p2
-				if self.kalm3.get()==True:
-					kalm_tmp = p3
-				if self.kalm4.get()==True:
-					kalm_tmp = p4
-			if self.measure.get()==1:
-				if self.kalm1.get()==True:
-					kalm_tmp = c1			
-				if self.kalm2.get()==True:
-					kalm_tmp = c2
-				if self.kalm3.get()==True:
-					kalm_tmp = c3
-				if self.kalm4.get()==True:
-					kalm_tmp = c4
-			# if self.multsen.get()==True:
-			# 	kalm_tmp = z_k
+
+			predict = H @ kf.predict()
+			self.predictions_x.append(predict[0][0])
+			self.predictions_y.append(predict[1][0])	
+			self.kFilter.append([self.predictions_x[-1][0],self.predictions_y[-1][0]])	
+
+			predict_1 = H @ kf1.predict()
+			self.predictions_x1.append(predict_1[0][0])
+			self.predictions_y1.append(predict_1[1][0])	
+			self.kFilter1.append([self.predictions_x1[-1][0],self.predictions_y1[-1][0]])
 	
+			predict_2 = H @ kf2.predict()
+			self.predictions_x2.append(predict_2[0][0])
+			self.predictions_y2.append(predict_2[1][0])	
+			self.kFilter2.append([self.predictions_x2[-1][0],self.predictions_y2[-1][0]])	
 
+			predict_3 = H @ kf3.predict()
+			self.predictions_x3.append(predict_3[0][0])
+			self.predictions_y3.append(predict_3[1][0])	
+			self.kFilter3.append([self.predictions_x3[-1][0],self.predictions_y3[-1][0]])	
 
-			predict_1 = kf.predict()
-			predict_1 = H @ predict_1
-			#print("post",predict_1[0],predict_1[1])
-			#print("truth",calcPosition(i)[0],calcPosition(i)[1])
-			print(kf.P)
-			self.predictions_x.append(predict_1[0])
-			self.predictions_y.append(predict_1[1])		
-			
+			predict_4 = H @ kf4.predict()
+			self.predictions_x4.append(predict_4[0][0])
+			self.predictions_y4.append(predict_4[1][0])	
+			self.kFilter4.append([self.predictions_x4[-1][0],self.predictions_y4[-1][0]])	
+
 			self.x_all.append(i)
 			self.gTruth.append(calcPosition(i))
-			
-			self.kFilter.append([self.predictions_x[-1][0],self.predictions_y[-1][0]])	
 			if (i%5==0) or (i==0):
-				kf.update(kalm_tmp)
-				self.measure_r.append(kalm_tmp)
+				kf.update(z_k)
+				kf1.update(p1)
+				kf2.update(p2)
+				kf3.update(p3)
+				kf4.update(p4)				
+
+				self.measure_r.append(p1)
 				self.measureX.append(i)
 				self.measureY.append(coord_Distanz(self.measure_r[-1], self.gTruth[i]))
-			#kf.update(self.measure_r[-1])
-			#self.measure_r.append(self.measure_r[-1])
+
 
 			
 				
-			self.kFilterY.append(coord_Distanz(self.kFilter[i], self.gTruth[i])) 
 
+			self.kFilterY.append(coord_Distanz(self.kFilter[i], self.gTruth[i]))
+			self.kFilterY1.append(coord_Distanz(self.kFilter1[i], self.gTruth[i]))			
+			self.kFilterY2.append(coord_Distanz(self.kFilter2[i], self.gTruth[i]))
+			self.kFilterY3.append(coord_Distanz(self.kFilter3[i], self.gTruth[i]))
+			self.kFilterY4.append(coord_Distanz(self.kFilter4[i], self.gTruth[i]))
 			self.kalm_rad.set_data(self.measureX, self.measureY)
-			self.kalm_filt.set_data(self.x_all , self.kFilterY)
+
+			if self.kalm1.get()==True:
+				self.kalm_filt1.set_data(self.x_all , self.kFilterY1)		
+			if self.kalm2.get()==True:
+				self.kalm_filt2.set_data(self.x_all , self.kFilterY2)
+			if self.kalm3.get()==True:
+				self.kalm_filt3.set_data(self.x_all , self.kFilterY3)
+			if self.kalm4.get()==True:
+				self.kalm_filt4.set_data(self.x_all , self.kFilterY4)
+			if self.multsen_kalm.get()==True:
+				self.kalm_filt.set_data(self.x_all , self.kFilterY)			
+			
+			
+			
 			self.bx.set_xlim(i-50,i+50)
 			self.bx.set_xlabel(i)   
 
-			return self.scat2,self.pltsen1,self.pltsen2,self.pltsen3,self.pltsen4,self.pltsen5,self.multisen,self.kalm_filt,self.kalm_rad,self.ell1,self.ell2,self.ell3,self.ell4,self.ell_p
+			return self.scat2,self.pltsen1,self.pltsen2,self.pltsen3,self.pltsen4,self.pltsen5,self.multisen,self.kalm_filt,self.kalm_filt1,self.kalm_filt2,self.kalm_filt3,self.kalm_filt4,self.kalm_rad,self.ell1,self.ell2,self.ell3,self.ell4,self.ell_p
 		
 
 
